@@ -33,20 +33,74 @@
          *    
          * 
          */
-    router.use( async function(req, res, next){
+
+      
+
+    async function createJsonSchemaFromArray(schemaArray){
         
-        const ep = req.url.substring(1,req.url.length)
-       //console.log(ep, req.method.toLocaleLowerCase())
-        db.selectInformationSchema(ep,req.method.toLocaleLowerCase())
+        let schema = []
+        schemaArray.map((column, index) => {
+            schema[index] = {}
+            schema[index].column_name = column.column_name
+            schema[index].is_nullable = column.is_nullable
+            schema[index].data_type = column.data_type
+            schema[index].column_default = column.column_default
+        })
+
+        return schema
+
+    }
+
+    async function validateRequestAgainstEpSchema(method, epSchema, requestBody){
+        console.log(requestBody)
+        if(method === 'get') return
+        else if(method === 'post'){
+            epSchema.map((column) => {
+                if(column.column_default !== null){
+                    /* no need for validation */
+                }
+                
+            })
+        }
+        else if(method === 'put'){
+
+        }
+        else if(method === 'delete'){
+
+        }
+            
+    }
+
+    async function routerDBValidation(ep, method, request){
+        
+        db.selectInformationSchema(ep, method)
         .then((data) => {
 
             if(data && data.retcode  > 399){
                 //let e = new Error(data.retcode, data.message)               
                 return res.send(data.retcode, data.message)
             }  
+            else{
+                const epSchema = createJsonSchemaFromArray(data.returnData)
+                
+                 validateRequestAgainstEpSchema(method, epSchema, request.body)
+            }
            
-            next()
+            
 
+        })
+    }
+
+    router.use( async function(req, res, next){
+        
+        const ep = req.url.substring(1,req.url.length)
+        const method = req.method.toLocaleLowerCase() 
+        
+        routerDBValidation(ep, method, req)
+        .then(() => {
+            
+            next()
+        
         })
         
     })
@@ -61,6 +115,13 @@
         res.send('data')
      /*  })  */
      //res.json({object_one:'this is an api test...you have passed'})
+ })
+
+ 
+ router.post('/sess', function(req,res){
+   
+        res.send('data')
+   
  })
 
  module.exports = router;
