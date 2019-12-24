@@ -29,11 +29,12 @@ async function generalSelectAndReturnRows(query, queryParams){
     validation if that ep exists
     validation if the method exists on the ep
  */
-function selectInformationSchema(ep, method){
+module.exports.selectInformationSchema = async function(ep, method){
 
     let jsonReturn = 
         {
-            retcode:200,
+            retcode:1,
+            statusCode:200,
             message:'',
             method:method,
             returnData:[]
@@ -46,15 +47,17 @@ function selectInformationSchema(ep, method){
         [ep]
     )
     .then((epData) =>{
-console.log(epData)
+
         if(epData.length < 1 || epData[0].ep !== ep ) {
-            jsonReturn.retcode = 404
+            jsonReturn.statusCode = 404
+            jsonReturn.retcode = -1
             jsonReturn.message = 'Not Found'
             return jsonReturn
         }
         
         if(epData[0][method] === false){
-            jsonReturn.retcode = 405
+            jsonReturn.statusCode = 405
+            jsonReturn.retcode = -1
             jsonReturn.message = 'Method Not Allowed'
             return jsonReturn
         }
@@ -81,4 +84,3 @@ console.log(epData)
 
 
 
-module.exports.selectInformationSchema = selectInformationSchema
